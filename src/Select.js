@@ -8,7 +8,6 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { findDOMNode } from 'react-dom';
-import arrayMove from 'array-move';
 
 import defaultArrowRenderer from './utils/defaultArrowRenderer';
 import defaultClearRenderer from './utils/defaultClearRenderer';
@@ -21,6 +20,7 @@ import OptionGroup from './OptionGroup';
 import SortableTags from './Sortable';
 import Value from './Value';
 
+const arrayMove = require('array-move');
 
 function clone(obj) {
 	const copy = {};

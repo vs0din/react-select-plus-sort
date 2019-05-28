@@ -13,9 +13,11 @@
     "url": "git+https://github.com/HubSpot/react-select-plus.git"
   },
   "dependencies": {
+    "array-move": "^2.1.0",
     "classnames": "^2.2.4",
     "prop-types": "^15.5.8",
-    "react-input-autosize": "^2.1.2"
+    "react-input-autosize": "^2.1.2",
+    "react-sortable-hoc": "^1.9.1"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

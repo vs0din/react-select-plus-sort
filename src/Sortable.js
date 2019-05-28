@@ -1,6 +1,9 @@
 import React                                  from 'react';
-import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 import Value                                  from './Value';
+
+var Sortable = require('react-sortable-hoc');
+var SortableContainer = Sortable.SortableContainer;
+var SortableElement = Sortable.SortableElement;
 
 export const SortableItem = SortableElement(( props )=>
 <Value {...props}/>);
