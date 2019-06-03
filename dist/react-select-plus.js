@@ -851,7 +851,7 @@ var SortableTags = SortableContainer(function (_ref) {
 	Licensed under the MIT License (MIT), see
 	http://jedwatson.github.io/react-select
 */
-var SwapArray = require('swap-array');
+var SwapArray = require('swap-array').default;
 
 function clone(obj) {
 	var copy = {};
