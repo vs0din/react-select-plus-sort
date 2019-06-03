@@ -20,7 +20,7 @@ import OptionGroup from './OptionGroup';
 import SortableTags from './Sortable';
 import Value from './Value';
 
-const arrayMove = require('array-move');
+const SwapArray= require('swap-array');
 
 function clone(obj) {
 	const copy = {};
@@ -709,7 +709,7 @@ class Select extends React.Component {
 	swapValue ({ oldIndex, newIndex }) {
 		if ( oldIndex===newIndex ) return;
 		let valueArray = this.getValueArray(this.props.value);
-		this.setValue(arrayMove(valueArray, oldIndex, newIndex));
+		this.setValue(SwapArray(valueArray, oldIndex, newIndex));
 	}
 
 	popValue () {

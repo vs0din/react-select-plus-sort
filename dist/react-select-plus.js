@@ -851,7 +851,7 @@ var SortableTags = SortableContainer(function (_ref) {
 	Licensed under the MIT License (MIT), see
 	http://jedwatson.github.io/react-select
 */
-var arrayMove = require('array-move');
+var SwapArray = require('swap-array');
 
 function clone(obj) {
 	var copy = {};
@@ -1597,7 +1597,7 @@ var Select$1 = function (_React$Component) {
 
 			if (oldIndex === newIndex) return;
 			var valueArray = this.getValueArray(this.props.value);
-			this.setValue(arrayMove(valueArray, oldIndex, newIndex));
+			this.setValue(SwapArray(valueArray, oldIndex, newIndex));
 		}
 	}, {
 		key: 'popValue',
