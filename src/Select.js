@@ -77,6 +77,14 @@ const handleRequired = (value, multi) => {
 	return (multi ? value.length === 0 : Object.keys(value).length === 0);
 };
 
+const shouldCancelStart = (e) => {
+    // Cancel sorting if the event target is an `input`, `textarea`, `select` or `option`
+    if (['input', 'textarea', 'select', 'option'].indexOf(e.target.tagName.toLowerCase()) !== -1 ||
+		    e.target.className.indexOf('Select-value-icon') !== -1) {
+        return true; // Return true to cancel sorting
+    }
+};
+
 class Select extends React.Component {
 	constructor (props) {
 		super(props);
@@ -1294,7 +1302,7 @@ class Select extends React.Component {
 					(
 						<SortableTags
 						valueArray={valueArray}
-						disabled={this.props.disabled}
+						disabled={this.props.disabled || (this.props.disableOnClose && !isOpen)}
 						_instancePrefix={this._instancePrefix}
 						onClick={this.props.onValueClick ? this.handleValueClick : null}
 						removeValue={this.removeValue}
@@ -1306,6 +1314,8 @@ class Select extends React.Component {
 						isDeleteRight={this.props.isDeleteRight}
 						axis="xy"
 						helperClass={this.props.helperClass}
+						minSelected={this.props.minSelected}
+						shouldCancelStart={shouldCancelStart}
 						/>
 					):(
 					<span className="Select-multi-value-wrapper" id={this._instancePrefix + '-value'}>
@@ -1343,6 +1353,7 @@ Select.propTypes = {
 	closeOnSelect: PropTypes.bool,        // whether to close the menu when a value is selected
 	deleteRemoves: PropTypes.bool,        // whether backspace removes an item if there is no text input
 	delimiter: PropTypes.string,          // delimiter to use to join multiple values for the hidden field value
+	disableOnClose: PropTypes.bool,       // Disable items on closed select
 	disabled: PropTypes.bool,             // whether the Select is disabled or not
 	dropdownComponent: PropTypes.func,    // dropdown component to render the menu in
 	escapeClearsValue: PropTypes.bool,    // whether escape clears the value when the menu is closed
@@ -1367,6 +1378,7 @@ Select.propTypes = {
 	menuContainerStyle: PropTypes.object, // optional style to apply to the menu container
 	menuRenderer: PropTypes.func,         // renders a custom menu with options
 	menuStyle: PropTypes.object,          // optional style to apply to the menu
+	minSelected: PropTypes.number,				// minimum selected amount for draggable multiselect
 	multi: PropTypes.bool,                // multi-value input
 	name: PropTypes.string,               // generates a hidden <input /> tag with this field name for html forms
 	noResultsText: stringOrNode,          // placeholder displayed when there are no matching search results
@@ -1439,6 +1451,7 @@ Select.defaultProps = {
 	matchProp: 'any',
 	menuBuffer: 0,
 	menuRenderer: defaultMenuRenderer,
+	minSelected: 0,
 	multi: false,
 	noResultsText: 'No results found',
 	onBlurResetsInput: true,

@@ -55,6 +55,9 @@ var MultiSelectField = createClass({
 					closeOnSelect={!stayOpen}
 					disabled={disabled}
 					multi
+					minSelected={1}
+					isDraggable
+					isDeleteRight
 					onChange={this.handleSelectChange}
 					options={options}
 					placeholder="Select your favourite(s)"

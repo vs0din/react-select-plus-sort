@@ -1,16 +1,16 @@
 {
   "name": "react-select-plus-delete",
-  "version": "1.2.3",
-  "description": "A fork of react-select with support for option groups",
+  "version": "1.2.7",
+  "description": "A fork of react-select-plus with dragging multiselect support",
   "main": "lib/index.js",
   "jsnext:main": "dist/react-select-plus.es.js",
   "module": "dist/react-select-plus.es.js",
   "style": "dist/react-select-plus.min.css",
-  "author": "HubSpot",
+  "author": "blurvene",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/HubSpot/react-select-plus.git"
+    "url": "git+https://github.com/blurve/react-select-plus.git"
   },
   "dependencies": {
     "array-move": "^2.1.0",

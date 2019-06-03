@@ -16,19 +16,27 @@ export const SortableTags = SortableContainer(({
 	 removeValue,
 	 placeholder,
 	 renderLabel,
+   isDeleteRight,
 	 onClick,
-	 input
+	 input,
+	 minSelected
   })=>{
+	const isDeletable = minSelected < valueArray.length;
 	return (
 		<span className="Select-multi-value-wrapper" id={_instancePrefix + '-value'}>
 		{valueArray.map((value, i) => {
 			return (
 					<SortableItem
-						disabled={disabled|| value.clearableValue === false}
+						disabled={
+							disabled||
+							value.clearableValue === false ||
+							!(minSelected < valueArray.length)
+						}
 						id={_instancePrefix + '-value-' + i}
 						instancePrefix={_instancePrefix}
 						onRemove={removeValue}
 						placeholder={placeholder}
+            isDeleteRight={isDeleteRight}
 						key={`item-${i}`}
 						index={i}
 						value={value}

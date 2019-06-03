@@ -812,8 +812,10 @@ var SortableTags = SortableContainer(function (_ref) {
 	    removeValue = _ref.removeValue,
 	    placeholder = _ref.placeholder,
 	    renderLabel = _ref.renderLabel,
+	    isDeleteRight = _ref.isDeleteRight,
 	    onClick = _ref.onClick,
-	    input = _ref.input;
+	    input = _ref.input,
+	    minSelected = _ref.minSelected;
 
 	return React__default.createElement(
 		'span',
@@ -822,11 +824,12 @@ var SortableTags = SortableContainer(function (_ref) {
 			return React__default.createElement(
 				SortableItem,
 				{
-					disabled: disabled || value.clearableValue === false,
+					disabled: disabled || value.clearableValue === false || !(minSelected < valueArray.length),
 					id: _instancePrefix + '-value-' + i,
 					instancePrefix: _instancePrefix,
 					onRemove: removeValue,
 					placeholder: placeholder,
+					isDeleteRight: isDeleteRight,
 					key: 'item-' + i,
 					index: i,
 					value: value
@@ -902,6 +905,13 @@ var shouldShowPlaceholder = function shouldShowPlaceholder(state, props, isOpen)
 var handleRequired = function handleRequired(value, multi) {
 	if (!value) return true;
 	return multi ? value.length === 0 : Object.keys(value).length === 0;
+};
+
+var shouldCancelStart = function shouldCancelStart(e) {
+	// Cancel sorting if the event target is an `input`, `textarea`, `select` or `option`
+	if (['input', 'textarea', 'select', 'option'].indexOf(e.target.tagName.toLowerCase()) !== -1 || e.target.className.indexOf('Select-value-icon') !== -1) {
+		return true; // Return true to cancel sorting
+	}
 };
 
 var Select$1 = function (_React$Component) {
@@ -2224,7 +2234,7 @@ var Select$1 = function (_React$Component) {
 					},
 					this.props.isDraggable && this.props.multi ? React__default.createElement(SortableTags, {
 						valueArray: valueArray,
-						disabled: this.props.disabled,
+						disabled: this.props.disabled || this.props.disableOnClose && !isOpen,
 						_instancePrefix: this._instancePrefix,
 						onClick: this.props.onValueClick ? this.handleValueClick : null,
 						removeValue: this.removeValue,
@@ -2235,7 +2245,9 @@ var Select$1 = function (_React$Component) {
 						focusedOptionIndex: focusedOptionIndex,
 						isDeleteRight: this.props.isDeleteRight,
 						axis: 'xy',
-						helperClass: this.props.helperClass
+						helperClass: this.props.helperClass,
+						minSelected: this.props.minSelected,
+						shouldCancelStart: shouldCancelStart
 					}) : React__default.createElement(
 						'span',
 						{ className: 'Select-multi-value-wrapper', id: this._instancePrefix + '-value' },
@@ -2273,6 +2285,7 @@ Select$1.propTypes = {
 	closeOnSelect: PropTypes.bool, // whether to close the menu when a value is selected
 	deleteRemoves: PropTypes.bool, // whether backspace removes an item if there is no text input
 	delimiter: PropTypes.string, // delimiter to use to join multiple values for the hidden field value
+	disableOnClose: PropTypes.bool, // Disable items on closed select
 	disabled: PropTypes.bool, // whether the Select is disabled or not
 	dropdownComponent: PropTypes.func, // dropdown component to render the menu in
 	escapeClearsValue: PropTypes.bool, // whether escape clears the value when the menu is closed
@@ -2297,6 +2310,7 @@ Select$1.propTypes = {
 	menuContainerStyle: PropTypes.object, // optional style to apply to the menu container
 	menuRenderer: PropTypes.func, // renders a custom menu with options
 	menuStyle: PropTypes.object, // optional style to apply to the menu
+	minSelected: PropTypes.number, // minimum selected amount for draggable multiselect
 	multi: PropTypes.bool, // multi-value input
 	name: PropTypes.string, // generates a hidden <input /> tag with this field name for html forms
 	noResultsText: stringOrNode, // placeholder displayed when there are no matching search results
@@ -2369,6 +2383,7 @@ Select$1.defaultProps = {
 	matchProp: 'any',
 	menuBuffer: 0,
 	menuRenderer: menuRenderer,
+	minSelected: 0,
 	multi: false,
 	noResultsText: 'No results found',
 	onBlurResetsInput: true,
