@@ -9,6 +9,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { findDOMNode } from 'react-dom';
 
+
 import defaultArrowRenderer from './utils/defaultArrowRenderer';
 import defaultClearRenderer from './utils/defaultClearRenderer';
 import defaultFilterOptions from './utils/defaultFilterOptions';
@@ -20,7 +21,7 @@ import OptionGroup from './OptionGroup';
 import SortableTags from './Sortable';
 import Value from './Value';
 
-const SwapArray= require('swap-array');
+const SwapArray = require('swap-array').default;
 
 function clone(obj) {
 	const copy = {};
