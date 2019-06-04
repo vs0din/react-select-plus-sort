@@ -722,14 +722,17 @@ class Select extends React.Component {
 
 	removeValue (value) {
 		let valueArray = this.getValueArray(this.props.value);
-		this.setValue(valueArray.filter(i => i[this.props.valueKey] !== value[this.props.valueKey]));
+		if(this.props.multi && valueArray.length>this.props.minSelected){
+			this.setValue(valueArray.filter(i => i[this.props.valueKey] !== value[this.props.valueKey]));
+		}
 		this.focus();
 	}
 
 	clearValue (event) {
 		// if the event was triggered by a mousedown and not the primary
 		// button, ignore it.
-		if (event && event.type === 'mousedown' && event.button !== 0) {
+		if ((event && event.type === 'mousedown' && event.button !== 0) ||
+		(this.props.multi && this.props.minSelected)) {
 			return;
 		}
 

@@ -1608,9 +1608,11 @@ var Select$1 = function (_React$Component) {
 			var _this5 = this;
 
 			var valueArray = this.getValueArray(this.props.value);
-			this.setValue(valueArray.filter(function (i) {
-				return i[_this5.props.valueKey] !== value[_this5.props.valueKey];
-			}));
+			if (this.props.multi && valueArray.length > this.props.minSelected) {
+				this.setValue(valueArray.filter(function (i) {
+					return i[_this5.props.valueKey] !== value[_this5.props.valueKey];
+				}));
+			}
 			this.focus();
 		}
 	}, {
@@ -1618,7 +1620,7 @@ var Select$1 = function (_React$Component) {
 		value: function clearValue(event) {
 			// if the event was triggered by a mousedown and not the primary
 			// button, ignore it.
-			if (event && event.type === 'mousedown' && event.button !== 0) {
+			if (event && event.type === 'mousedown' && event.button !== 0 || this.props.multi && this.props.minSelected) {
 				return;
 			}
 
