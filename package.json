@@ -1,6 +1,6 @@
 {
-  "name": "react-select-plus-delete",
-  "version": "1.3.0",
+  "name": "react-select-plus-sort",
+  "version": "1.0.0",
   "description": "A fork of react-select-plus with dragging multiselect support",
   "main": "lib/index.js",
   "jsnext:main": "dist/react-select-plus.es.js",

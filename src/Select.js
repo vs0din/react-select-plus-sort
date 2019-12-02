@@ -111,7 +111,8 @@ class Select extends React.Component {
 			'onOptionRef',
 			'removeValue',
 			'selectValue',
-			'swapValue'
+			'swapValue',
+			'getReorderedValueArray'
 		].forEach((fn) => this[fn] = this[fn].bind(this));
 
 		this.state = {
@@ -713,6 +714,25 @@ class Select extends React.Component {
 		this.setValue(SwapArray(valueArray, oldIndex, newIndex));
 	}
 
+	getReorderedValueArray ({ oldIndex, newIndex }) {
+		let valueArray = this.getValueArray(this.props.value);
+		const movedElement = valueArray.find((el, index) => index === oldIndex);
+		const remainingValueArray = valueArray.filter((el, index) => index !== oldIndex);
+		const reorderedValueArray = [];
+
+		remainingValueArray.forEach((el, index) => {
+			if (index === newIndex) {
+				reorderedValueArray.push(movedElement);
+				reorderedValueArray.push(el);
+			} else {
+				reorderedValueArray.push(el);
+			}
+		});
+		if (newIndex === remainingValueArray.length) reorderedValueArray.push(movedElement);
+
+		return this.setValue(reorderedValueArray);
+	}
+
 	popValue () {
 		let valueArray = this.getValueArray(this.props.value);
 		if (!valueArray.length) return;
@@ -1305,21 +1325,21 @@ class Select extends React.Component {
 				{this.props.isDraggable && this.props.multi ?
 					(
 						<SortableTags
-						valueArray={valueArray}
-						disabled={this.props.disabled || (this.props.disableOnClose && !isOpen)}
-						_instancePrefix={this._instancePrefix}
-						onClick={this.props.onValueClick ? this.handleValueClick : null}
-						removeValue={this.removeValue}
-						placeholder={this.props.placeholder}
-						renderLabel={this.props.valueRenderer || this.getOptionLabel}
-						onSortEnd={this.swapValue}
-						input={this.renderInput(valueArray, focusedOptionIndex)}
-						focusedOptionIndex={focusedOptionIndex}
-						isDeleteRight={this.props.isDeleteRight}
-						axis="xy"
-						helperClass={this.props.helperClass}
-						minSelected={this.props.minSelected}
-						shouldCancelStart={shouldCancelStart}
+							valueArray={valueArray}
+							disabled={this.props.disabled || (this.props.disableOnClose && !isOpen)}
+							_instancePrefix={this._instancePrefix}
+							onClick={this.props.onValueClick ? this.handleValueClick : null}
+							removeValue={this.removeValue}
+							placeholder={this.props.placeholder}
+							renderLabel={this.props.valueRenderer || this.getOptionLabel}
+							onSortEnd={this.getReorderedValueArray}
+							input={this.renderInput(valueArray, focusedOptionIndex)}
+							focusedOptionIndex={focusedOptionIndex}
+							isDeleteRight={this.props.isDeleteRight}
+							axis="xy"
+							helperClass={this.props.helperClass}
+							minSelected={this.props.minSelected}
+							shouldCancelStart={shouldCancelStart}
 						/>
 					):(
 					<span className="Select-multi-value-wrapper" id={this._instancePrefix + '-value'}>

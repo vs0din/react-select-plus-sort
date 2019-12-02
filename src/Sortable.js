@@ -16,7 +16,7 @@ export const SortableTags = SortableContainer(({
 	 removeValue,
 	 placeholder,
 	 renderLabel,
-   isDeleteRight,
+     isDeleteRight,
 	 onClick,
 	 input,
 	 minSelected

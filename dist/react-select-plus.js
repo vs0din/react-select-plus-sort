@@ -922,7 +922,7 @@ var Select$1 = function (_React$Component) {
 
 		var _this = possibleConstructorReturn(this, (Select.__proto__ || Object.getPrototypeOf(Select)).call(this, props));
 
-		['clearValue', 'focusOption', 'getOptionLabel', 'handleInputBlur', 'handleInputChange', 'handleInputFocus', 'handleInputValueChange', 'handleKeyDown', 'handleMenuScroll', 'handleMouseDown', 'handleMouseDownOnArrow', 'handleMouseDownOnMenu', 'handleTouchEnd', 'handleTouchEndClearValue', 'handleTouchMove', 'handleTouchOutside', 'handleTouchStart', 'handleValueClick', 'onOptionRef', 'removeValue', 'selectValue', 'swapValue'].forEach(function (fn) {
+		['clearValue', 'focusOption', 'getOptionLabel', 'handleInputBlur', 'handleInputChange', 'handleInputFocus', 'handleInputValueChange', 'handleKeyDown', 'handleMenuScroll', 'handleMouseDown', 'handleMouseDownOnArrow', 'handleMouseDownOnMenu', 'handleTouchEnd', 'handleTouchEndClearValue', 'handleTouchMove', 'handleTouchOutside', 'handleTouchStart', 'handleValueClick', 'onOptionRef', 'removeValue', 'selectValue', 'swapValue', 'getReorderedValueArray'].forEach(function (fn) {
 			return _this[fn] = _this[fn].bind(_this);
 		});
 
@@ -1600,6 +1600,33 @@ var Select$1 = function (_React$Component) {
 			this.setValue(SwapArray(valueArray, oldIndex, newIndex));
 		}
 	}, {
+		key: 'getReorderedValueArray',
+		value: function getReorderedValueArray(_ref3) {
+			var oldIndex = _ref3.oldIndex,
+			    newIndex = _ref3.newIndex;
+
+			var valueArray = this.getValueArray(this.props.value);
+			var movedElement = valueArray.find(function (el, index) {
+				return index === oldIndex;
+			});
+			var remainingValueArray = valueArray.filter(function (el, index) {
+				return index !== oldIndex;
+			});
+			var reorderedValueArray = [];
+
+			remainingValueArray.forEach(function (el, index) {
+				if (index === newIndex) {
+					reorderedValueArray.push(movedElement);
+					reorderedValueArray.push(el);
+				} else {
+					reorderedValueArray.push(el);
+				}
+			});
+			if (newIndex === remainingValueArray.length) reorderedValueArray.push(movedElement);
+
+			return this.setValue(reorderedValueArray);
+		}
+	}, {
 		key: 'popValue',
 		value: function popValue() {
 			var valueArray = this.getValueArray(this.props.value);
@@ -1857,8 +1884,8 @@ var Select$1 = function (_React$Component) {
 				onBlur: this.handleInputBlur,
 				onChange: this.handleInputChange,
 				onFocus: this.handleInputFocus,
-				ref: function ref(_ref3) {
-					return _this7.input = _ref3;
+				ref: function ref(_ref4) {
+					return _this7.input = _ref4;
 				},
 				role: 'combobox',
 				required: this.state.required,
@@ -1885,8 +1912,8 @@ var Select$1 = function (_React$Component) {
 					className: className,
 					onBlur: this.handleInputBlur,
 					onFocus: this.handleInputFocus,
-					ref: function ref(_ref4) {
-						return _this7.input = _ref4;
+					ref: function ref(_ref5) {
+						return _this7.input = _ref5;
 					},
 					role: 'combobox',
 					style: { border: 0, width: 1, display: 'inline-block' },
@@ -2089,8 +2116,8 @@ var Select$1 = function (_React$Component) {
 				return React__default.createElement('input', {
 					disabled: this.props.disabled,
 					name: this.props.name,
-					ref: function ref(_ref5) {
-						return _this8.value = _ref5;
+					ref: function ref(_ref6) {
+						return _this8.value = _ref6;
 					},
 					type: 'hidden',
 					value: value
@@ -2150,8 +2177,8 @@ var Select$1 = function (_React$Component) {
 				null,
 				React__default.createElement(
 					'div',
-					{ ref: function ref(_ref7) {
-							return _this9.menuContainer = _ref7;
+					{ ref: function ref(_ref8) {
+							return _this9.menuContainer = _ref8;
 						}, className: 'Select-menu-outer', style: this.props.menuContainerStyle },
 					React__default.createElement(
 						'div',
@@ -2160,8 +2187,8 @@ var Select$1 = function (_React$Component) {
 							id: this._instancePrefix + '-list',
 							onMouseDown: this.handleMouseDownOnMenu,
 							onScroll: this.handleMenuScroll,
-							ref: function ref(_ref6) {
-								return _this9.menu = _ref6;
+							ref: function ref(_ref7) {
+								return _this9.menu = _ref7;
 							},
 							role: 'listbox',
 							style: this.props.menuStyle,
@@ -2215,16 +2242,16 @@ var Select$1 = function (_React$Component) {
 
 			return React__default.createElement(
 				'div',
-				{ ref: function ref(_ref9) {
-						return _this10.wrapper = _ref9;
+				{ ref: function ref(_ref10) {
+						return _this10.wrapper = _ref10;
 					},
 					className: className,
 					style: this.props.wrapperStyle },
 				this.renderHiddenField(valueArray),
 				React__default.createElement(
 					'div',
-					{ ref: function ref(_ref8) {
-							return _this10.control = _ref8;
+					{ ref: function ref(_ref9) {
+							return _this10.control = _ref9;
 						},
 						className: 'Select-control',
 						onKeyDown: this.handleKeyDown,
@@ -2242,7 +2269,7 @@ var Select$1 = function (_React$Component) {
 						removeValue: this.removeValue,
 						placeholder: this.props.placeholder,
 						renderLabel: this.props.valueRenderer || this.getOptionLabel,
-						onSortEnd: this.swapValue,
+						onSortEnd: this.getReorderedValueArray,
 						input: this.renderInput(valueArray, focusedOptionIndex),
 						focusedOptionIndex: focusedOptionIndex,
 						isDeleteRight: this.props.isDeleteRight,
