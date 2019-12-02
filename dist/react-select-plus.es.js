@@ -765,14 +765,16 @@ var Value = function (_React$Component) {
 	}, {
 		key: 'render',
 		value: function render() {
+			var isDeleteRight = this.props.isDeleteRight;
+
 			return React.createElement(
 				'div',
 				{ className: classNames('Select-value', this.props.value.className),
 					style: this.props.value.style,
 					title: this.props.value.title
 				},
-				this.renderRemoveIcon(),
-				this.renderLabel()
+				isDeleteRight ? this.renderLabel() : this.renderRemoveIcon(),
+				isDeleteRight ? this.renderRemoveIcon() : this.renderLabel()
 			);
 		}
 	}]);
@@ -783,16 +785,69 @@ Value.propTypes = {
 	children: PropTypes.node,
 	disabled: PropTypes.bool, // disabled prop passed to ReactSelect
 	id: PropTypes.string, // Unique id for the value - used for aria
+	isDeleteRight: PropTypes.bool, // is Delete icon on right
 	onClick: PropTypes.func, // method to handle click on value label
 	onRemove: PropTypes.func, // method to handle removal of the value
 	value: PropTypes.object.isRequired // the option object for this value
 };
+
+var Sortable = require('react-sortable-hoc');
+var SortableContainer = Sortable.SortableContainer;
+var SortableElement = Sortable.SortableElement;
+
+var SortableItem = SortableElement(function (props) {
+	return React.createElement(Value, props);
+});
+
+var SortableTags = SortableContainer(function (_ref) {
+	var valueArray = _ref.valueArray,
+	    disabled = _ref.disabled,
+	    _instancePrefix = _ref._instancePrefix,
+	    valueKey = _ref.valueKey,
+	    removeValue = _ref.removeValue,
+	    placeholder = _ref.placeholder,
+	    renderLabel = _ref.renderLabel,
+	    isDeleteRight = _ref.isDeleteRight,
+	    onClick = _ref.onClick,
+	    input = _ref.input,
+	    minSelected = _ref.minSelected;
+
+	return React.createElement(
+		'span',
+		{ className: 'Select-multi-value-wrapper', id: _instancePrefix + '-value' },
+		valueArray.map(function (value, i) {
+			return React.createElement(
+				SortableItem,
+				{
+					disabled: disabled || value.clearableValue === false || !(minSelected < valueArray.length),
+					id: _instancePrefix + '-value-' + i,
+					instancePrefix: _instancePrefix,
+					onRemove: removeValue,
+					placeholder: placeholder,
+					isDeleteRight: isDeleteRight,
+					key: 'item-' + i,
+					index: i,
+					value: value
+				},
+				renderLabel(value, i),
+				React.createElement(
+					'span',
+					{ className: 'Select-aria-only' },
+					'\xA0'
+				)
+			);
+		}),
+		input
+	);
+});
 
 /*!
 	Copyright (c) 2017 Jed Watson.
 	Licensed under the MIT License (MIT), see
 	http://jedwatson.github.io/react-select
 */
+var SwapArray = require('swap-array').default;
+
 function clone(obj) {
 	var copy = {};
 	for (var attr in obj) {
@@ -847,6 +902,13 @@ var handleRequired = function handleRequired(value, multi) {
 	return multi ? value.length === 0 : Object.keys(value).length === 0;
 };
 
+var shouldCancelStart = function shouldCancelStart(e) {
+	// Cancel sorting if the event target is an `input`, `textarea`, `select` or `option`
+	if (['input', 'textarea', 'select', 'option'].indexOf(e.target.tagName.toLowerCase()) !== -1 || e.target.className.indexOf('Select-value-icon') !== -1) {
+		return true; // Return true to cancel sorting
+	}
+};
+
 var Select$1 = function (_React$Component) {
 	inherits(Select, _React$Component);
 
@@ -855,7 +917,7 @@ var Select$1 = function (_React$Component) {
 
 		var _this = possibleConstructorReturn(this, (Select.__proto__ || Object.getPrototypeOf(Select)).call(this, props));
 
-		['clearValue', 'focusOption', 'getOptionLabel', 'handleInputBlur', 'handleInputChange', 'handleInputFocus', 'handleInputValueChange', 'handleKeyDown', 'handleMenuScroll', 'handleMouseDown', 'handleMouseDownOnArrow', 'handleMouseDownOnMenu', 'handleTouchEnd', 'handleTouchEndClearValue', 'handleTouchMove', 'handleTouchOutside', 'handleTouchStart', 'handleValueClick', 'onOptionRef', 'removeValue', 'selectValue'].forEach(function (fn) {
+		['clearValue', 'focusOption', 'getOptionLabel', 'handleInputBlur', 'handleInputChange', 'handleInputFocus', 'handleInputValueChange', 'handleKeyDown', 'handleMenuScroll', 'handleMouseDown', 'handleMouseDownOnArrow', 'handleMouseDownOnMenu', 'handleTouchEnd', 'handleTouchEndClearValue', 'handleTouchMove', 'handleTouchOutside', 'handleTouchStart', 'handleValueClick', 'onOptionRef', 'removeValue', 'selectValue', 'swapValue', 'getReorderedValueArray'].forEach(function (fn) {
 			return _this[fn] = _this[fn].bind(_this);
 		});
 
@@ -1523,6 +1585,43 @@ var Select$1 = function (_React$Component) {
 			}
 		}
 	}, {
+		key: 'swapValue',
+		value: function swapValue(_ref2) {
+			var oldIndex = _ref2.oldIndex,
+			    newIndex = _ref2.newIndex;
+
+			if (oldIndex === newIndex) return;
+			var valueArray = this.getValueArray(this.props.value);
+			this.setValue(SwapArray(valueArray, oldIndex, newIndex));
+		}
+	}, {
+		key: 'getReorderedValueArray',
+		value: function getReorderedValueArray(_ref3) {
+			var oldIndex = _ref3.oldIndex,
+			    newIndex = _ref3.newIndex;
+
+			var valueArray = this.getValueArray(this.props.value);
+			var movedElement = valueArray.find(function (el, index) {
+				return index === oldIndex;
+			});
+			var remainingValueArray = valueArray.filter(function (el, index) {
+				return index !== oldIndex;
+			});
+			var reorderedValueArray = [];
+
+			remainingValueArray.forEach(function (el, index) {
+				if (index === newIndex) {
+					reorderedValueArray.push(movedElement);
+					reorderedValueArray.push(el);
+				} else {
+					reorderedValueArray.push(el);
+				}
+			});
+			if (newIndex === remainingValueArray.length) reorderedValueArray.push(movedElement);
+
+			return this.setValue(reorderedValueArray);
+		}
+	}, {
 		key: 'popValue',
 		value: function popValue() {
 			var valueArray = this.getValueArray(this.props.value);
@@ -1536,9 +1635,11 @@ var Select$1 = function (_React$Component) {
 			var _this5 = this;
 
 			var valueArray = this.getValueArray(this.props.value);
-			this.setValue(valueArray.filter(function (i) {
-				return i[_this5.props.valueKey] !== value[_this5.props.valueKey];
-			}));
+			if (this.props.multi && valueArray.length > this.props.minSelected) {
+				this.setValue(valueArray.filter(function (i) {
+					return i[_this5.props.valueKey] !== value[_this5.props.valueKey];
+				}));
+			}
 			this.focus();
 		}
 	}, {
@@ -1546,7 +1647,7 @@ var Select$1 = function (_React$Component) {
 		value: function clearValue(event) {
 			// if the event was triggered by a mousedown and not the primary
 			// button, ignore it.
-			if (event && event.type === 'mousedown' && event.button !== 0) {
+			if (event && event.type === 'mousedown' && event.button !== 0 || this.props.multi && this.props.minSelected) {
 				return;
 			}
 
@@ -1778,8 +1879,8 @@ var Select$1 = function (_React$Component) {
 				onBlur: this.handleInputBlur,
 				onChange: this.handleInputChange,
 				onFocus: this.handleInputFocus,
-				ref: function ref(_ref2) {
-					return _this7.input = _ref2;
+				ref: function ref(_ref4) {
+					return _this7.input = _ref4;
 				},
 				role: 'combobox',
 				required: this.state.required,
@@ -1806,8 +1907,8 @@ var Select$1 = function (_React$Component) {
 					className: className,
 					onBlur: this.handleInputBlur,
 					onFocus: this.handleInputFocus,
-					ref: function ref(_ref3) {
-						return _this7.input = _ref3;
+					ref: function ref(_ref5) {
+						return _this7.input = _ref5;
 					},
 					role: 'combobox',
 					style: { border: 0, width: 1, display: 'inline-block' },
@@ -2010,8 +2111,8 @@ var Select$1 = function (_React$Component) {
 				return React.createElement('input', {
 					disabled: this.props.disabled,
 					name: this.props.name,
-					ref: function ref(_ref4) {
-						return _this8.value = _ref4;
+					ref: function ref(_ref6) {
+						return _this8.value = _ref6;
 					},
 					type: 'hidden',
 					value: value
@@ -2071,8 +2172,8 @@ var Select$1 = function (_React$Component) {
 				null,
 				React.createElement(
 					'div',
-					{ ref: function ref(_ref6) {
-							return _this9.menuContainer = _ref6;
+					{ ref: function ref(_ref8) {
+							return _this9.menuContainer = _ref8;
 						}, className: 'Select-menu-outer', style: this.props.menuContainerStyle },
 					React.createElement(
 						'div',
@@ -2081,8 +2182,8 @@ var Select$1 = function (_React$Component) {
 							id: this._instancePrefix + '-list',
 							onMouseDown: this.handleMouseDownOnMenu,
 							onScroll: this.handleMenuScroll,
-							ref: function ref(_ref5) {
-								return _this9.menu = _ref5;
+							ref: function ref(_ref7) {
+								return _this9.menu = _ref7;
 							},
 							role: 'listbox',
 							style: this.props.menuStyle,
@@ -2136,16 +2237,16 @@ var Select$1 = function (_React$Component) {
 
 			return React.createElement(
 				'div',
-				{ ref: function ref(_ref8) {
-						return _this10.wrapper = _ref8;
+				{ ref: function ref(_ref10) {
+						return _this10.wrapper = _ref10;
 					},
 					className: className,
 					style: this.props.wrapperStyle },
 				this.renderHiddenField(valueArray),
 				React.createElement(
 					'div',
-					{ ref: function ref(_ref7) {
-							return _this10.control = _ref7;
+					{ ref: function ref(_ref9) {
+							return _this10.control = _ref9;
 						},
 						className: 'Select-control',
 						onKeyDown: this.handleKeyDown,
@@ -2155,7 +2256,23 @@ var Select$1 = function (_React$Component) {
 						onTouchStart: this.handleTouchStart,
 						style: this.props.style
 					},
-					React.createElement(
+					this.props.isDraggable && this.props.multi ? React.createElement(SortableTags, {
+						valueArray: valueArray,
+						disabled: this.props.disabled || this.props.disableOnClose && !isOpen,
+						_instancePrefix: this._instancePrefix,
+						onClick: this.props.onValueClick ? this.handleValueClick : null,
+						removeValue: this.removeValue,
+						placeholder: this.props.placeholder,
+						renderLabel: this.props.valueRenderer || this.getOptionLabel,
+						onSortEnd: this.getReorderedValueArray,
+						input: this.renderInput(valueArray, focusedOptionIndex),
+						focusedOptionIndex: focusedOptionIndex,
+						isDeleteRight: this.props.isDeleteRight,
+						axis: 'xy',
+						helperClass: this.props.helperClass,
+						minSelected: this.props.minSelected,
+						shouldCancelStart: shouldCancelStart
+					}) : React.createElement(
 						'span',
 						{ className: 'Select-multi-value-wrapper', id: this._instancePrefix + '-value' },
 						this.renderValue(valueArray, isOpen),
@@ -2192,17 +2309,21 @@ Select$1.propTypes = {
 	closeOnSelect: PropTypes.bool, // whether to close the menu when a value is selected
 	deleteRemoves: PropTypes.bool, // whether backspace removes an item if there is no text input
 	delimiter: PropTypes.string, // delimiter to use to join multiple values for the hidden field value
+	disableOnClose: PropTypes.bool, // Disable items on closed select
 	disabled: PropTypes.bool, // whether the Select is disabled or not
 	dropdownComponent: PropTypes.func, // dropdown component to render the menu in
 	escapeClearsValue: PropTypes.bool, // whether escape clears the value when the menu is closed
 	filterOption: PropTypes.func, // method to filter a single option (option, filterString)
 	filterOptions: PropTypes.any, // boolean to enable default filtering or function to filter the options array ([options], filterString, [values])
+	helperClass: PropTypes.string, // class for draggable tags
 	id: PropTypes.string, // html id to set on the input element for accessibility or tests
 	ignoreAccents: PropTypes.bool, // whether to strip diacritics when filtering
 	ignoreCase: PropTypes.bool, // whether to perform case-insensitive filtering
 	inputProps: PropTypes.object, // custom attributes for the Input
 	inputRenderer: PropTypes.func, // returns a custom input component
 	instanceId: PropTypes.string, // set the components instanceId
+	isDeleteRight: PropTypes.bool, // is Delete icon on right
+	isDraggable: PropTypes.bool, // whether the Multiselect has draggable tags
 	isLoading: PropTypes.bool, // whether the Select is loading externally or not (such as options being loaded)
 	isOpen: PropTypes.bool, // whether the Select dropdown menu is open or not
 	joinValues: PropTypes.bool, // joins multiple values into a single form field with the delimiter (legacy mode)
@@ -2213,6 +2334,7 @@ Select$1.propTypes = {
 	menuContainerStyle: PropTypes.object, // optional style to apply to the menu container
 	menuRenderer: PropTypes.func, // renders a custom menu with options
 	menuStyle: PropTypes.object, // optional style to apply to the menu
+	minSelected: PropTypes.number, // minimum selected amount for draggable multiselect
 	multi: PropTypes.bool, // multi-value input
 	name: PropTypes.string, // generates a hidden <input /> tag with this field name for html forms
 	noResultsText: stringOrNode, // placeholder displayed when there are no matching search results
@@ -2272,9 +2394,12 @@ Select$1.defaultProps = {
 	dropdownComponent: Dropdown,
 	escapeClearsValue: true,
 	filterOptions: filterOptions,
+	helperClass: '',
 	ignoreAccents: true,
 	ignoreCase: true,
 	inputProps: {},
+	isDeleteRight: false,
+	isDraggable: false,
 	isLoading: false,
 	joinValues: false,
 	labelKey: 'label',
@@ -2282,6 +2407,7 @@ Select$1.defaultProps = {
 	matchProp: 'any',
 	menuBuffer: 0,
 	menuRenderer: menuRenderer,
+	minSelected: 0,
 	multi: false,
 	noResultsText: 'No results found',
 	onBlurResetsInput: true,

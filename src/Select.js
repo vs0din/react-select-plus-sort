@@ -9,6 +9,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { findDOMNode } from 'react-dom';
 
+
 import defaultArrowRenderer from './utils/defaultArrowRenderer';
 import defaultClearRenderer from './utils/defaultClearRenderer';
 import defaultFilterOptions from './utils/defaultFilterOptions';
@@ -17,7 +18,10 @@ import defaultMenuRenderer from './utils/defaultMenuRenderer';
 import Dropdown from './Dropdown';
 import Option from './Option';
 import OptionGroup from './OptionGroup';
+import SortableTags from './Sortable';
 import Value from './Value';
+
+const SwapArray = require('swap-array').default;
 
 function clone(obj) {
 	const copy = {};
@@ -74,6 +78,14 @@ const handleRequired = (value, multi) => {
 	return (multi ? value.length === 0 : Object.keys(value).length === 0);
 };
 
+const shouldCancelStart = (e) => {
+    // Cancel sorting if the event target is an `input`, `textarea`, `select` or `option`
+    if (['input', 'textarea', 'select', 'option'].indexOf(e.target.tagName.toLowerCase()) !== -1 ||
+		    e.target.className.indexOf('Select-value-icon') !== -1) {
+        return true; // Return true to cancel sorting
+    }
+};
+
 class Select extends React.Component {
 	constructor (props) {
 		super(props);
@@ -99,6 +111,8 @@ class Select extends React.Component {
 			'onOptionRef',
 			'removeValue',
 			'selectValue',
+			'swapValue',
+			'getReorderedValueArray'
 		].forEach((fn) => this[fn] = this[fn].bind(this));
 
 		this.state = {
@@ -694,6 +708,31 @@ class Select extends React.Component {
 		}
 	}
 
+	swapValue ({ oldIndex, newIndex }) {
+		if ( oldIndex===newIndex ) return;
+		let valueArray = this.getValueArray(this.props.value);
+		this.setValue(SwapArray(valueArray, oldIndex, newIndex));
+	}
+
+	getReorderedValueArray ({ oldIndex, newIndex }) {
+		let valueArray = this.getValueArray(this.props.value);
+		const movedElement = valueArray.find((el, index) => index === oldIndex);
+		const remainingValueArray = valueArray.filter((el, index) => index !== oldIndex);
+		const reorderedValueArray = [];
+
+		remainingValueArray.forEach((el, index) => {
+			if (index === newIndex) {
+				reorderedValueArray.push(movedElement);
+				reorderedValueArray.push(el);
+			} else {
+				reorderedValueArray.push(el);
+			}
+		});
+		if (newIndex === remainingValueArray.length) reorderedValueArray.push(movedElement);
+
+		return this.setValue(reorderedValueArray);
+	}
+
 	popValue () {
 		let valueArray = this.getValueArray(this.props.value);
 		if (!valueArray.length) return;
@@ -703,14 +742,17 @@ class Select extends React.Component {
 
 	removeValue (value) {
 		let valueArray = this.getValueArray(this.props.value);
-		this.setValue(valueArray.filter(i => i[this.props.valueKey] !== value[this.props.valueKey]));
+		if(this.props.multi && valueArray.length>this.props.minSelected){
+			this.setValue(valueArray.filter(i => i[this.props.valueKey] !== value[this.props.valueKey]));
+		}
 		this.focus();
 	}
 
 	clearValue (event) {
 		// if the event was triggered by a mousedown and not the primary
 		// button, ignore it.
-		if (event && event.type === 'mousedown' && event.button !== 0) {
+		if ((event && event.type === 'mousedown' && event.button !== 0) ||
+		(this.props.multi && this.props.minSelected)) {
 			return;
 		}
 
@@ -1280,10 +1322,31 @@ class Select extends React.Component {
 					onTouchStart={this.handleTouchStart}
 					style={this.props.style}
 				>
+				{this.props.isDraggable && this.props.multi ?
+					(
+						<SortableTags
+							valueArray={valueArray}
+							disabled={this.props.disabled || (this.props.disableOnClose && !isOpen)}
+							_instancePrefix={this._instancePrefix}
+							onClick={this.props.onValueClick ? this.handleValueClick : null}
+							removeValue={this.removeValue}
+							placeholder={this.props.placeholder}
+							renderLabel={this.props.valueRenderer || this.getOptionLabel}
+							onSortEnd={this.getReorderedValueArray}
+							input={this.renderInput(valueArray, focusedOptionIndex)}
+							focusedOptionIndex={focusedOptionIndex}
+							isDeleteRight={this.props.isDeleteRight}
+							axis="xy"
+							helperClass={this.props.helperClass}
+							minSelected={this.props.minSelected}
+							shouldCancelStart={shouldCancelStart}
+						/>
+					):(
 					<span className="Select-multi-value-wrapper" id={this._instancePrefix + '-value'}>
 						{this.renderValue(valueArray, isOpen)}
 						{this.renderInput(valueArray, focusedOptionIndex)}
-					</span>
+					</span>)
+				}
 					{removeMessage}
 					{this.renderLoading()}
 					{this.renderClear()}
@@ -1314,18 +1377,22 @@ Select.propTypes = {
 	closeOnSelect: PropTypes.bool,        // whether to close the menu when a value is selected
 	deleteRemoves: PropTypes.bool,        // whether backspace removes an item if there is no text input
 	delimiter: PropTypes.string,          // delimiter to use to join multiple values for the hidden field value
+	disableOnClose: PropTypes.bool,       // Disable items on closed select
 	disabled: PropTypes.bool,             // whether the Select is disabled or not
 	dropdownComponent: PropTypes.func,    // dropdown component to render the menu in
 	escapeClearsValue: PropTypes.bool,    // whether escape clears the value when the menu is closed
 	filterOption: PropTypes.func,         // method to filter a single option (option, filterString)
 	filterOptions: PropTypes.any,         // boolean to enable default filtering or function to filter the options array ([options], filterString, [values])
+	helperClass: PropTypes.string,				// class for draggable tags
 	id: PropTypes.string, 				        // html id to set on the input element for accessibility or tests
 	ignoreAccents: PropTypes.bool,        // whether to strip diacritics when filtering
 	ignoreCase: PropTypes.bool,           // whether to perform case-insensitive filtering
 	inputProps: PropTypes.object,         // custom attributes for the Input
 	inputRenderer: PropTypes.func,        // returns a custom input component
 	instanceId: PropTypes.string,         // set the components instanceId
-	isLoading: PropTypes.bool,            // whether the Select is loading externally or not (such as options being loaded)
+	isDeleteRight: PropTypes.bool,			  // is Delete icon on right
+	isDraggable: PropTypes.bool,          // whether the Multiselect has draggable tags
+	isLoading: PropTypes.bool,					  // whether the Select is loading externally or not (such as options being loaded)
 	isOpen: PropTypes.bool,               // whether the Select dropdown menu is open or not
 	joinValues: PropTypes.bool,           // joins multiple values into a single form field with the delimiter (legacy mode)
 	labelKey: PropTypes.string,           // path of the label value in option objects
@@ -1335,6 +1402,7 @@ Select.propTypes = {
 	menuContainerStyle: PropTypes.object, // optional style to apply to the menu container
 	menuRenderer: PropTypes.func,         // renders a custom menu with options
 	menuStyle: PropTypes.object,          // optional style to apply to the menu
+	minSelected: PropTypes.number,				// minimum selected amount for draggable multiselect
 	multi: PropTypes.bool,                // multi-value input
 	name: PropTypes.string,               // generates a hidden <input /> tag with this field name for html forms
 	noResultsText: stringOrNode,          // placeholder displayed when there are no matching search results
@@ -1394,9 +1462,12 @@ Select.defaultProps = {
 	dropdownComponent: Dropdown,
 	escapeClearsValue: true,
 	filterOptions: defaultFilterOptions,
+	helperClass: '',
 	ignoreAccents: true,
 	ignoreCase: true,
 	inputProps: {},
+	isDeleteRight: false,
+	isDraggable: false,
 	isLoading: false,
 	joinValues: false,
 	labelKey: 'label',
@@ -1404,6 +1475,7 @@ Select.defaultProps = {
 	matchProp: 'any',
 	menuBuffer: 0,
 	menuRenderer: defaultMenuRenderer,
+	minSelected: 0,
 	multi: false,
 	noResultsText: 'No results found',
 	onBlurResetsInput: true,
