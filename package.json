@@ -6,11 +6,11 @@
   "jsnext:main": "dist/react-select-plus.es.js",
   "module": "dist/react-select-plus.es.js",
   "style": "dist/react-select-plus.min.css",
-  "author": "blurvene",
+  "author": "vs0din",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/blurve/react-select-plus.git"
+    "url": "git+https://github.com/vs0din/react-select-plus-sort.git"
   },
   "dependencies": {
     "classnames": "^2.2.4",
